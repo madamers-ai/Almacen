@@ -204,7 +204,7 @@
 
         .top-zones-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin-bottom: 35px;
         }
@@ -376,7 +376,7 @@
                             </div>
                             <button class="btn btn-add" onclick="agregarEtiquetaYStock()">Añadir e Imprimir</button>
                             <button class="btn btn-print" onclick="window.print()">Imprimir Hojas</button>
-                            <button class="btn btn-pdf" onclick="window.print()">Guardar como PDF</button>
+                            <button class="btn btn-pdf" onclick="guardarPDF()">Guardar como PDF</button>
                             <button class="btn btn-clear" onclick="limpiarColaImpresion()">Limpiar Cola</button>
                         </div>
                         <div class="labels-list-container">
@@ -442,7 +442,7 @@
         // Enlace de la aplicación web activa validada
         const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycby9Uc4U0IlhAect83BbStwbKeQnQUtO886bWx04xF7_hzqE_LYoNvzrrNGjjX1GTqgZ7Q/exec";
 
-        const ZONAS_TOP = ["LÀSER", "TERRA (Grandes / Intermedios)", "ENTREGAS"];
+        const ZONAS_TOP = ["LÀSER", "CAJAS", "TERRA (Grandes / Intermedios)", "ENTREGAS"];
         const RACK_COLUMNAS = ["A", "B", "C"];
         const RACK_FILAS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
         const ZONAS_CURSO = ["PLEGADORA", "MECANIZACIÓN", "BOX1", "BOX2", "BOX3", "BOX4", "BOX5", "ROBOT"];
@@ -792,6 +792,41 @@
                     await ejecutarPeticionNube(params);
                 } catch(e) { console.error("Error al eliminar material:", e); }
             }
+        }
+
+        async function guardarPDF() {
+            const hojas = document.querySelectorAll('.hoja-a4');
+            if (hojas.length === 0) {
+                alert("La cola está vacía. Añade etiquetas primero.");
+                return;
+            }
+            mostrarCargando(true);
+            if (!window.html2canvas) {
+                await new Promise((res, rej) => {
+                    const s = document.createElement('script');
+                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                    s.onload = res; s.onerror = rej;
+                    document.head.appendChild(s);
+                });
+            }
+            if (!window.jspdf) {
+                await new Promise((res, rej) => {
+                    const s = document.createElement('script');
+                    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                    s.onload = res; s.onerror = rej;
+                    document.head.appendChild(s);
+                });
+            }
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            for (let i = 0; i < hojas.length; i++) {
+                const canvas = await html2canvas(hojas[i], { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                if (i > 0) pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+            }
+            pdf.save('etiquetas.pdf');
+            mostrarCargando(false);
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
