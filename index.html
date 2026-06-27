@@ -325,6 +325,23 @@
             color: #dc2626; background: none; border: none; float: right; cursor: pointer; font-weight: bold;
         }
 
+        /* --- ETIQUETA CHAPA --- */
+        .etiqueta-chapa-a5 {
+            width: 100%; height: 480px; border: 8px solid #000000;
+            background-color: #ffffff; margin-bottom: 25px; display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; padding: 30px; box-sizing: border-box;
+        }
+        .etiqueta-chapa-a5:last-child { margin-bottom: 0; }
+        .chapa-material-espesor {
+            font-family: Arial, sans-serif; font-size: 36px; font-weight: bold;
+            text-transform: uppercase; margin-bottom: 30px; letter-spacing: 2px;
+        }
+        .chapa-requerimiento {
+            font-family: Impact, 'Arial Black', sans-serif; font-size: 90px;
+            text-transform: uppercase; line-height: 1; letter-spacing: -2px;
+        }
+
         /* --- REGLAS DE IMPRESIÓN --- */
         @media print {
             @page { size: A4 portrait; margin: 0mm; }
@@ -351,6 +368,7 @@
             <button class="tab-btn" onclick="cambiarPestana('tab-crear', this)">1. Crear e Imprimir</button>
             <button class="tab-btn" onclick="cambiarPestana('tab-almacen', this)">2. Control de Almacén</button>
             <button class="tab-btn" onclick="cambiarPestana('tab-buscador', this)">3. Buscador de Pedidos</button>
+            <button class="tab-btn" onclick="cambiarPestana('tab-chapas', this)">4. Inventario Chapas</button>
         </div>
 
         <div id="tab-inicio" class="tab-content" style="display: block;">
@@ -400,6 +418,15 @@
                         <div style="font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: #86efac; margin-bottom: 6px;">Módulo 3</div>
                         <div style="font-size: 1.1rem; font-weight: 800; text-transform: uppercase;">Buscador de Pedidos</div>
                         <div style="font-size: 0.8rem; color: #86efac; margin-top: 8px;">Localiza y mueve material</div>
+                    </div>
+
+                    <div onclick="cambiarPestanaDesdeInicio('tab-chapas')" style="background: #7c3aed; color: white; border-radius: 12px; padding: 35px 20px; text-align: center; cursor: pointer; transition: transform 0.15s, background 0.15s;" 
+                         onmouseover="this.style.background='#6d28d9'; this.style.transform='translateY(-4px)'"
+                         onmouseout="this.style.background='#7c3aed'; this.style.transform='translateY(0)'">
+                        <div style="font-size: 2.5rem; margin-bottom: 12px;">🪨</div>
+                        <div style="font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: #ddd6fe; margin-bottom: 6px;">Módulo 4</div>
+                        <div style="font-size: 1.1rem; font-weight: 800; text-transform: uppercase;">Inventario Chapas</div>
+                        <div style="font-size: 0.8rem; color: #ddd6fe; margin-top: 8px;">Control de material en stock</div>
                     </div>
 
                 </div>
@@ -491,6 +518,74 @@
                 <tbody id="tabla-inventario"></tbody>
             </table>
         </div>
+        <div id="tab-chapas" class="tab-content">
+            <table class="layout-table">
+                <tr>
+                    <td class="col-panel">
+                        <div class="form-box">
+                            <h2>Nueva Chapa</h2>
+                            <div class="input-group">
+                                <label for="ch-material">Material</label>
+                                <select id="ch-material"><option value="">Cargando...</option></select>
+                            </div>
+                            <div class="input-group">
+                                <label for="ch-espesor">Espesor (mm)</label>
+                                <input type="number" id="ch-espesor" placeholder="Ej: 1.5" step="0.1" min="0" autocomplete="off">
+                            </div>
+                            <div class="input-group">
+                                <label for="ch-requerimiento">Nº Lote / Requerimiento</label>
+                                <input type="text" id="ch-requerimiento" placeholder="Ej: LOT-2026-001" autocomplete="off">
+                            </div>
+                            <div class="input-group">
+                                <label for="ch-zona">Zona</label>
+                                <select id="ch-zona">
+                                    <option value="RETALES">RETALES</option>
+                                    <option value="PALETS">PALETS</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-add" onclick="agregarChapaYImprimir()">Dar de Alta e Imprimir</button>
+                            <button class="btn btn-print" onclick="imprimirChapas()">Imprimir Hojas</button>
+                            <button class="btn btn-pdf" onclick="guardarPDFChapas()">Guardar como PDF</button>
+                            <button class="btn btn-clear" onclick="limpiarColaChapas()">Limpiar Cola</button>
+                        </div>
+                        <div class="labels-list-container">
+                            <div class="list-title">Cola de impresión (<span id="lbl-contador-chapas">0</span>)</div>
+                            <div id="lista-dinamica-chapas"></div>
+                        </div>
+                    </td>
+                    <td class="col-preview">
+                        <div class="preview-area" id="contenedor-hojas-chapas" style="margin-bottom: 30px;">
+                            <div style="padding: 40px; color: #666; font-weight: bold; text-align: center;">
+                                La cola está vacía. Añade chapas para generar etiquetas.
+                            </div>
+                        </div>
+
+                        <div class="sub-block-title" style="margin-top: 20px;">Stock de Chapas</div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                            <div>
+                                <div style="background:#1e293b; color:white; padding:10px 15px; border-radius:6px; margin-bottom:12px; font-weight:800; text-transform:uppercase; letter-spacing:1px;">
+                                    📦 Zona Palets
+                                </div>
+                                <table class="stock-table">
+                                    <thead><tr><th>Material</th><th>Espesor</th><th>Lote</th><th>Acción</th></tr></thead>
+                                    <tbody id="tabla-chapas-palets"></tbody>
+                                </table>
+                            </div>
+                            <div>
+                                <div style="background:#92400e; color:white; padding:10px 15px; border-radius:6px; margin-bottom:12px; font-weight:800; text-transform:uppercase; letter-spacing:1px;">
+                                    ✂️ Zona Retales
+                                </div>
+                                <table class="stock-table">
+                                    <thead><tr><th>Material</th><th>Espesor</th><th>Lote</th><th>Acción</th></tr></thead>
+                                    <tbody id="tabla-chapas-retales"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
     </div>
 
     <script>
@@ -588,6 +683,7 @@
 
             if(tabId === 'tab-almacen') renderizarMapaAlmacen();
             if(tabId === 'tab-buscador') filtrarInventario();
+            if(tabId === 'tab-chapas') { cargarMateriales(); cargarChapas(); }
         }
 
         async function agregarEtiquetaYStock() {
@@ -881,9 +977,183 @@
             }
         }
 
+        // ===== MÓDULO CHAPAS =====
+        let inventarioChapas = [];
+
+        async function cargarChapas() {
+            const params = new URLSearchParams({ action: "getChapas" });
+            const respuesta = await ejecutarPeticionNube(params);
+            if (!Array.isArray(respuesta)) return;
+
+            const datos = (respuesta.length > 0 && respuesta[0][0] === "id") ? respuesta.slice(1) : respuesta;
+            inventarioChapas = datos
+                .filter(f => f[0])
+                .map(f => ({
+                    id: String(f[0]),
+                    material: String(f[1] || ""),
+                    espesor: String(f[2] || ""),
+                    requerimiento: String(f[3] || ""),
+                    zona: String(f[4] || "")
+                }));
+            renderizarChapas();
+        }
+
+        async function cargarMateriales() {
+            const params = new URLSearchParams({ action: "getMateriales" });
+            const respuesta = await ejecutarPeticionNube(params);
+            const select = document.getElementById('ch-material');
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Selecciona material --</option>';
+            if (Array.isArray(respuesta)) {
+                respuesta.forEach(m => {
+                    select.innerHTML += `<option value="${m}">${m}</option>`;
+                });
+            }
+        }
+
+        function renderizarChapas() {
+            const tblPalets = document.getElementById('tabla-chapas-palets');
+            const tblRetales = document.getElementById('tabla-chapas-retales');
+            if (!tblPalets || !tblRetales) return;
+
+            [['PALETS', tblPalets], ['RETALES', tblRetales]].forEach(([zona, tbody]) => {
+                tbody.innerHTML = "";
+                const filtradas = inventarioChapas.filter(c => c.zona.toUpperCase() === zona);
+                if (filtradas.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="color:#999; font-style:italic;">Sin stock</td></tr>`;
+                    return;
+                }
+                filtradas.forEach(c => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight:bold;">${c.material}</td>
+                        <td>${c.espesor} mm</td>
+                        <td>${c.requerimiento}</td>
+                        <td><button class="btn-delete-stock" onclick="eliminarChapa('${c.id}')">Dar de Baja</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+
+
+        async function eliminarChapa(id) {
+            if (confirm("¿Dar de baja esta chapa?")) {
+                inventarioChapas = inventarioChapas.filter(c => c.id !== id);
+                renderizarChapas();
+                const params = new URLSearchParams({ action: "deleteChapa", id });
+                try {
+                    await ejecutarPeticionNube(params);
+                } catch(e) { console.error("Error al eliminar chapa:", e); }
+            }
+        }
+        let colaChapas = [];
+
+        async function agregarChapaYImprimir() {
+            const material = document.getElementById('ch-material').value;
+            const espesor = document.getElementById('ch-espesor').value.trim();
+            const requerimiento = document.getElementById('ch-requerimiento').value.trim().toUpperCase();
+            const zona = document.getElementById('ch-zona').value;
+
+            if (!material || !espesor || !requerimiento) {
+                alert("Por favor, rellena todos los campos.");
+                return;
+            }
+
+            const nuevoId = "CH-" + Date.now() + Math.random().toString(36).substr(2, 4).toUpperCase();
+            colaChapas.push({ id: nuevoId, material, espesor, requerimiento, zona });
+            inventarioChapas.push({ id: nuevoId, material, espesor, requerimiento, zona });
+            actualizarColaChapasVisual();
+            renderizarChapas();
+
+            const params = new URLSearchParams({ action: "addChapa", id: nuevoId, material, espesor, requerimiento, zona });
+            try { await ejecutarPeticionNube(params); } catch(e) { console.error("Error:", e); }
+
+            document.getElementById('ch-espesor').value = "";
+            document.getElementById('ch-requerimiento').value = "";
+            document.getElementById('ch-material').value = "";
+        }
+
+        function actualizarColaChapasVisual() {
+            const lista = document.getElementById('lista-dinamica-chapas');
+            const contenedor = document.getElementById('contenedor-hojas-chapas');
+            const contador = document.getElementById('lbl-contador-chapas');
+            contador.innerText = colaChapas.length;
+            lista.innerHTML = "";
+
+            colaChapas.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'label-item';
+                div.innerHTML = `<strong>${item.material}</strong> ${item.espesor}mm | ${item.requerimiento}
+                    <span class="label-item-delete" onclick="colaChapas.splice(${idx},1); actualizarColaChapasVisual();">×</span>`;
+                lista.appendChild(div);
+            });
+
+            contenedor.innerHTML = "";
+            if (colaChapas.length === 0) {
+                contenedor.innerHTML = `<div style="padding:40px; color:#666; font-weight:bold; text-align:center;">La cola está vacía.</div>`;
+                return;
+            }
+
+            for (let i = 0; i < colaChapas.length; i += 2) {
+                const hoja = document.createElement('div');
+                hoja.className = 'hoja-a4';
+                const c1 = colaChapas[i];
+                let html = `
+                    <div class="etiqueta-chapa-a5">
+                        <div class="chapa-material-espesor">${c1.material} &nbsp;·&nbsp; ${c1.espesor} mm</div>
+                        <div class="chapa-requerimiento">${c1.requerimiento}</div>
+                    </div>`;
+                if (i + 1 < colaChapas.length) {
+                    const c2 = colaChapas[i + 1];
+                    html += `
+                    <div class="etiqueta-chapa-a5">
+                        <div class="chapa-material-espesor">${c2.material} &nbsp;·&nbsp; ${c2.espesor} mm</div>
+                        <div class="chapa-requerimiento">${c2.requerimiento}</div>
+                    </div>`;
+                }
+                hoja.innerHTML = html;
+                contenedor.appendChild(hoja);
+            }
+        }
+
+        function limpiarColaChapas() {
+            colaChapas = [];
+            actualizarColaChapasVisual();
+        }
+
+        function imprimirChapas() {
+            window.print();
+        }
+
+        async function guardarPDFChapas() {
+            const hojas = document.getElementById('contenedor-hojas-chapas').querySelectorAll('.hoja-a4');
+            if (hojas.length === 0) { alert("La cola está vacía."); return; }
+            mostrarCargando(true);
+            if (!window.html2canvas) {
+                await new Promise((res, rej) => { const s = document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+            }
+            if (!window.jspdf) {
+                await new Promise((res, rej) => { const s = document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; s.onload=res; s.onerror=rej; document.head.appendChild(s); });
+            }
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            for (let i = 0; i < hojas.length; i++) {
+                const canvas = await html2canvas(hojas[i], { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                if (i > 0) pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+            }
+            pdf.save('etiquetas-chapas.pdf');
+            mostrarCargando(false);
+        }
+
+        // ===== FIN MÓDULO CHAPAS =====
+
         function cambiarPestanaDesdeInicio(tabId) {
             const botones = document.querySelectorAll('.tab-btn');
-            const tabs = ['tab-inicio','tab-crear','tab-almacen','tab-buscador'];
+            const tabs = ['tab-inicio','tab-crear','tab-almacen','tab-buscador','tab-chapas'];
             const idx = tabs.indexOf(tabId);
             if(idx >= 0) cambiarPestana(tabId, botones[idx]);
         }
