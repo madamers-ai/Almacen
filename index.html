@@ -803,21 +803,55 @@
             }
 
             filtrados.forEach(p => {
-                let opcionesMover = "";
-                DEPOSITOS_LISTA_COMPLETA.forEach(d => {
-                    opcionesMover += `<option value="${d}" ${d === p.ubicacion ? 'selected' : ''}>Mover a: ${d}</option>`;
-                });
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-weight:bold;">${p.cliente}</td>
                     <td>${p.pedido}</td>
                     <td>${p.palets}</td>
                     <td><span class="location-badge">${p.ubicacion}</span></td>
-                    <td><select onchange="moverDesdesBuscador('${p.id}', this.value, this)" style="padding:4px 6px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">${opcionesMover}</select></td>
+                    <td>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <select onchange="mostrarSubzonas('${p.id}', this)" style="padding:4px 6px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                                <option value="">-- Zona --</option>
+                                <option value="principales">Zonas principales</option>
+                                <option value="p1">Estantería P1</option>
+                                <option value="p2">Estantería P2</option>
+                                <option value="curso">Zonas en curso</option>
+                            </select>
+                            <select id="subzona-${p.id}" onchange="moverDesdesBuscador('${p.id}', this.value, this)" style="padding:4px 6px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer; display:none;">
+                                <option value="">-- Ubicación --</option>
+                            </select>
+                        </div>
+                    </td>
                     <td><button class="btn-delete-stock" onclick="eliminarStock('${p.id}')">Dar de Baja</button></td>
                 `;
                 tabla.appendChild(tr);
             });
+        }
+
+        function mostrarSubzonas(id, zonaSelect) {
+            const zona = zonaSelect.value;
+            const subSelect = document.getElementById('subzona-' + id);
+            subSelect.innerHTML = '<option value="">-- Ubicación --</option>';
+            subSelect.style.display = 'none';
+
+            if (!zona) return;
+
+            let opciones = [];
+            if (zona === 'principales') {
+                opciones = ZONAS_TOP;
+            } else if (zona === 'p1') {
+                RACK_FILAS.slice().reverse().forEach(f => RACK_COLUMNAS.forEach(c => opciones.push(`P1 - Casilla ${f}${c}`)));
+            } else if (zona === 'p2') {
+                RACK_FILAS.slice().reverse().forEach(f => RACK_COLUMNAS.forEach(c => opciones.push(`P2 - Casilla ${f}${c}`)));
+            } else if (zona === 'curso') {
+                opciones = ZONAS_CURSO.map(z => `CURSO - ${z}`);
+            }
+
+            opciones.forEach(d => {
+                subSelect.innerHTML += `<option value="${d}">${d}</option>`;
+            });
+            subSelect.style.display = 'block';
         }
 
         async function moverDesdesBuscador(id, nuevaUbi, selectEl) {
