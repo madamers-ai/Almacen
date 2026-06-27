@@ -347,12 +347,66 @@
 
     <div class="container">
         <div class="tabs-menu">
-            <button class="tab-btn active" onclick="cambiarPestana('tab-crear', this)">1. Crear e Imprimir</button>
+            <button class="tab-btn active" onclick="cambiarPestana('tab-inicio', this)">Inicio</button>
+            <button class="tab-btn" onclick="cambiarPestana('tab-crear', this)">1. Crear e Imprimir</button>
             <button class="tab-btn" onclick="cambiarPestana('tab-almacen', this)">2. Control de Almacén</button>
             <button class="tab-btn" onclick="cambiarPestana('tab-buscador', this)">3. Buscador de Pedidos</button>
         </div>
 
-        <div id="tab-crear" class="tab-content" style="display: block;">
+        <div id="tab-inicio" class="tab-content" style="display: block;">
+            <div style="min-height: 85vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px;">
+                
+                <!-- Logo y hora -->
+                <div style="text-align: center;">
+                    <img src="https://9metall.com/wp-content/uploads/2022/09/logo9metall-1.png" 
+                         alt="High 9Metal Works" 
+                         style="max-height: 100px; max-width: 320px; object-fit: contain; margin-bottom: 30px;"
+                         onerror="this.style.display='none'">
+                    <div id="reloj-inicio" style="font-size: 8rem; font-weight: 900; letter-spacing: -4px; color: #111827; line-height: 1; font-family: 'Segoe UI', sans-serif;"></div>
+                    <div id="fecha-inicio" style="font-size: 1.2rem; color: #6b7280; margin-top: 8px; text-transform: uppercase; letter-spacing: 2px;"></div>
+                </div>
+
+                <!-- Título sistema -->
+                <div style="text-align: center;">
+                    <div style="font-size: 0.9rem; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; color: #9ca3af; margin-bottom: 6px;">Sistema de</div>
+                    <div style="font-size: 2rem; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #111827;">Logística Interna</div>
+                </div>
+
+                <!-- Menú de acceso -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; width: 100%; max-width: 800px;">
+                    
+                    <div onclick="cambiarPestanaDesdeInicio('tab-crear')" style="background: #000; color: white; border-radius: 12px; padding: 35px 20px; text-align: center; cursor: pointer; transition: transform 0.15s, background 0.15s;" 
+                         onmouseover="this.style.background='#1f2937'; this.style.transform='translateY(-4px)'"
+                         onmouseout="this.style.background='#000'; this.style.transform='translateY(0)'">
+                        <div style="font-size: 2.5rem; margin-bottom: 12px;">🏷️</div>
+                        <div style="font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: #9ca3af; margin-bottom: 6px;">Módulo 1</div>
+                        <div style="font-size: 1.1rem; font-weight: 800; text-transform: uppercase;">Crear e Imprimir</div>
+                        <div style="font-size: 0.8rem; color: #9ca3af; margin-top: 8px;">Genera etiquetas de palets</div>
+                    </div>
+
+                    <div onclick="cambiarPestanaDesdeInicio('tab-almacen')" style="background: #1e40af; color: white; border-radius: 12px; padding: 35px 20px; text-align: center; cursor: pointer; transition: transform 0.15s, background 0.15s;"
+                         onmouseover="this.style.background='#1e3a8a'; this.style.transform='translateY(-4px)'"
+                         onmouseout="this.style.background='#1e40af'; this.style.transform='translateY(0)'">
+                        <div style="font-size: 2.5rem; margin-bottom: 12px;">🏭</div>
+                        <div style="font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: #93c5fd; margin-bottom: 6px;">Módulo 2</div>
+                        <div style="font-size: 1.1rem; font-weight: 800; text-transform: uppercase;">Control de Almacén</div>
+                        <div style="font-size: 0.8rem; color: #93c5fd; margin-top: 8px;">Mapa visual de ubicaciones</div>
+                    </div>
+
+                    <div onclick="cambiarPestanaDesdeInicio('tab-buscador')" style="background: #16a34a; color: white; border-radius: 12px; padding: 35px 20px; text-align: center; cursor: pointer; transition: transform 0.15s, background 0.15s;"
+                         onmouseover="this.style.background='#15803d'; this.style.transform='translateY(-4px)'"
+                         onmouseout="this.style.background='#16a34a'; this.style.transform='translateY(0)'">
+                        <div style="font-size: 2.5rem; margin-bottom: 12px;">🔍</div>
+                        <div style="font-size: 0.75rem; letter-spacing: 3px; text-transform: uppercase; color: #86efac; margin-bottom: 6px;">Módulo 3</div>
+                        <div style="font-size: 1.1rem; font-weight: 800; text-transform: uppercase;">Buscador de Pedidos</div>
+                        <div style="font-size: 0.8rem; color: #86efac; margin-top: 8px;">Localiza y mueve material</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-crear" class="tab-content">
             <table class="layout-table">
                 <tr>
                     <td class="col-panel">
@@ -430,6 +484,7 @@
                         <th>Nº Pedido</th>
                         <th>Bulto / Palet</th>
                         <th>Ubicación Actual</th>
+                        <th>Mover a</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
@@ -442,7 +497,7 @@
         // Enlace de la aplicación web activa validada
         const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycby9Uc4U0IlhAect83BbStwbKeQnQUtO886bWx04xF7_hzqE_LYoNvzrrNGjjX1GTqgZ7Q/exec";
 
-        const ZONAS_TOP = ["LÀSER", "TERRA (Grandes / Intermedios)", "ENTREGAS"];
+        const ZONAS_TOP = ["LÀSER", "CAJAS", "TERRA (Grandes / Intermedios)", "ENTREGAS"];
         const RACK_COLUMNAS = ["A", "B", "C"];
         const RACK_FILAS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
         const ZONAS_CURSO = ["PLEGADORA", "MECANIZACIÓN", "BOX1", "BOX2", "BOX3", "BOX4", "BOX5", "ROBOT"];
@@ -748,16 +803,36 @@
             }
 
             filtrados.forEach(p => {
+                let opcionesMover = "";
+                DEPOSITOS_LISTA_COMPLETA.forEach(d => {
+                    opcionesMover += `<option value="${d}" ${d === p.ubicacion ? 'selected' : ''}>Mover a: ${d}</option>`;
+                });
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="font-weight:bold;">${p.cliente}</td>
                     <td>${p.pedido}</td>
                     <td>${p.palets}</td>
                     <td><span class="location-badge">${p.ubicacion}</span></td>
+                    <td><select onchange="moverDesdesBuscador('${p.id}', this.value, this)" style="padding:4px 6px; border:1px solid #cbd5e1; border-radius:6px; font-size:0.85rem; font-weight:600; cursor:pointer;">${opcionesMover}</select></td>
                     <td><button class="btn-delete-stock" onclick="eliminarStock('${p.id}')">Dar de Baja</button></td>
                 `;
                 tabla.appendChild(tr);
             });
+        }
+
+        async function moverDesdesBuscador(id, nuevaUbi, selectEl) {
+            const palet = inventarioPalets.find(p => p.id == id);
+            if (palet) {
+                palet.ubicacion = nuevaUbi;
+                // Actualizar el badge de ubicación en la misma fila
+                const badge = selectEl.closest('tr').querySelector('.location-badge');
+                if (badge) badge.textContent = nuevaUbi;
+
+                const params = new URLSearchParams({ action: "update", id: id, ubicacion: nuevaUbi });
+                try {
+                    await ejecutarPeticionNube(params);
+                } catch(e) { console.error("Error al mover palet:", e); }
+            }
         }
 
         async function eliminarStock(id) {
@@ -771,6 +846,29 @@
                 } catch(e) { console.error("Error al eliminar material:", e); }
             }
         }
+
+        function cambiarPestanaDesdeInicio(tabId) {
+            const botones = document.querySelectorAll('.tab-btn');
+            const tabs = ['tab-inicio','tab-crear','tab-almacen','tab-buscador'];
+            const idx = tabs.indexOf(tabId);
+            if(idx >= 0) cambiarPestana(tabId, botones[idx]);
+        }
+
+        function actualizarReloj() {
+            const ahora = new Date();
+            const horas = String(ahora.getHours()).padStart(2,'0');
+            const minutos = String(ahora.getMinutes()).padStart(2,'0');
+            const segundos = String(ahora.getSeconds()).padStart(2,'0');
+            const reloj = document.getElementById('reloj-inicio');
+            if(reloj) reloj.textContent = `${horas}:${minutos}:${segundos}`;
+
+            const dias = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+            const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            const fecha = document.getElementById('fecha-inicio');
+            if(fecha) fecha.textContent = `${dias[ahora.getDay()]}, ${ahora.getDate()} de ${meses[ahora.getMonth()]} de ${ahora.getFullYear()}`;
+        }
+
+        setInterval(actualizarReloj, 1000);
 
         window.addEventListener('DOMContentLoaded', async () => {
             inicializarSelector();
