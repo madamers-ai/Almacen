@@ -470,7 +470,11 @@
                             <div style="padding: 40px; color: #666; font-weight: bold; text-align: center;">
                                 La cola está vacía. Añade etiquetas para generar las hojas A4 centradas.
                             </div>
-                        </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="sub-block-title">Preview Etiquetas</div>
+                                
                     </td>
                 </tr>
             </table>
@@ -559,7 +563,6 @@
                                 La cola está vacía. Añade chapas para generar etiquetas.
                             </div>
                         </div>
-
                         <div class="sub-block-title" style="margin-top: 20px;">Stock de Chapas</div>
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
                             <div>
@@ -999,16 +1002,34 @@
         }
 
         async function cargarMateriales() {
-            const params = new URLSearchParams({ action: "getMateriales" });
-            const respuesta = await ejecutarPeticionNube(params);
             const select = document.getElementById('ch-material');
             if (!select) return;
-            select.innerHTML = '<option value="">-- Selecciona material --</option>';
-            if (Array.isArray(respuesta)) {
-                respuesta.forEach(m => {
-                    select.innerHTML += `<option value="${m}">${m}</option>`;
-                });
-            }
+            select.innerHTML = '<option value="">Cargando...</option>';
+
+            return new Promise((resolve) => {
+                const cbName = "cbMat_" + Date.now();
+                const script = document.createElement("script");
+                window[cbName] = (data) => {
+                    delete window[cbName];
+                    document.body.removeChild(script);
+                    select.innerHTML = '<option value="">-- Selecciona material --</option>';
+                    if (Array.isArray(data)) {
+                        data.forEach(m => {
+                            if (m) select.innerHTML += `<option value="${m}">${m}</option>`;
+                        });
+                    }
+                    resolve();
+                };
+                const params = new URLSearchParams({ action: "getMateriales", callback: cbName });
+                script.src = `${URL_GOOGLE_SCRIPT}?${params.toString()}`;
+                script.onerror = () => {
+                    delete window[cbName];
+                    document.body.removeChild(script);
+                    select.innerHTML = '<option value="">Error al cargar</option>';
+                    resolve();
+                };
+                document.body.appendChild(script);
+            });
         }
 
         function renderizarChapas() {
