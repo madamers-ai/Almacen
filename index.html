@@ -342,6 +342,54 @@
             text-transform: uppercase; line-height: 1; letter-spacing: 16px;
         }
 
+        /* --- MÓDULO LASER --- */
+        .btn-filtro-laser {
+            padding: 8px 16px; border: 2px solid #cbd5e1; background: white;
+            border-radius: 6px; font-weight: 700; font-size: 0.8rem;
+            text-transform: uppercase; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-filtro-laser.actiu {
+            background: #000; color: white; border-color: #000;
+        }
+        .pedido-laser-item {
+            padding: 12px 15px; border-radius: 8px; margin-bottom: 8px;
+            cursor: pointer; border: 2px solid transparent;
+            transition: all 0.15s; display: flex; justify-content: space-between; align-items: center;
+        }
+        .pedido-laser-item:hover { transform: translateX(3px); }
+        .pedido-laser-item.obert { background: #fef2f2; border-color: #fca5a5; }
+        .pedido-laser-item.parcial { background: #fffbeb; border-color: #fcd34d; }
+        .pedido-laser-item.tallat { background: #f0fdf4; border-color: #86efac; }
+        .pedido-laser-item.seleccionat { outline: 3px solid #2563eb; }
+        .estat-badge-laser {
+            padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+        }
+        .estat-badge-laser.obert { background: #dc2626; color: white; }
+        .estat-badge-laser.parcial { background: #d97706; color: white; }
+        .estat-badge-laser.tallat { background: #16a34a; color: white; }
+        .planol-card {
+            background: white; border: 1px solid #e5e7eb; border-radius: 8px;
+            margin-bottom: 15px; overflow: hidden;
+        }
+        .planol-header {
+            padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .planol-header.obert { background: #fef2f2; }
+        .planol-header.parcial { background: #fffbeb; }
+        .planol-header.tallat { background: #f0fdf4; }
+        .planol-header.sense_cnc { background: #f8fafc; }
+        .cnc-row {
+            padding: 10px 15px; display: grid;
+            grid-template-columns: 80px 1fr 1fr 1fr 80px;
+            gap: 10px; align-items: center; border-bottom: 1px solid #f1f5f9;
+            font-size: 0.85rem;
+        }
+        .cnc-row:last-child { border-bottom: none; }
+        .cnc-row.obert { border-left: 4px solid #dc2626; }
+        .cnc-row.parcial { border-left: 4px solid #d97706; }
+        .cnc-row.tallat { border-left: 4px solid #16a34a; }
+
         /* --- REGLAS DE IMPRESIÓN --- */
         @media print {
             @page { size: A4 portrait; margin: 0mm; }
@@ -369,6 +417,7 @@
             <button class="tab-btn" onclick="cambiarPestana('tab-almacen', this)">2. Control de Almacén</button>
             <button class="tab-btn" onclick="cambiarPestana('tab-buscador', this)">3. Buscador de Pedidos</button>
             <button class="tab-btn" onclick="cambiarPestana('tab-chapas', this)">4. Inventario Chapas</button>
+            <button class="tab-btn" onclick="cambiarPestana('tab-laser', this)">5. Làser</button>
         </div>
 
         <div id="tab-inicio" class="tab-content" style="display: block;">
@@ -590,6 +639,34 @@
             </table>
         </div>
 
+        <div id="tab-laser" class="tab-content">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 25px;">
+
+                <!-- Panel esquerra: llistat pedidos -->
+                <div>
+                    <div class="sub-block-title">Pedidos Làser</div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">
+                        <button onclick="cargarPanelLaser('tots')" id="btn-tots" class="btn-filtro-laser actiu">Tots</button>
+                        <button onclick="cargarPanelLaser('obert')" id="btn-obert" class="btn-filtro-laser">Obert</button>
+                        <button onclick="cargarPanelLaser('parcial')" id="btn-parcial" class="btn-filtro-laser">Parcial</button>
+                        <button onclick="cargarPanelLaser('tallat')" id="btn-tallat" class="btn-filtro-laser">Tallat</button>
+                    </div>
+                    <div id="lista-pedidos-laser" style="max-height: 75vh; overflow-y: auto;"></div>
+                </div>
+
+                <!-- Panel dreta: detall pedido -->
+                <div>
+                    <div class="sub-block-title" id="titol-detall-laser">Selecciona un pedido</div>
+                    <div id="detall-laser" style="max-height: 75vh; overflow-y: auto;">
+                        <div style="padding: 40px; color: #999; text-align: center; font-style: italic;">
+                            Fes clic en un pedido per veure el detall
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -688,6 +765,7 @@
             if(tabId === 'tab-almacen') renderizarMapaAlmacen();
             if(tabId === 'tab-buscador') filtrarInventario();
             if(tabId === 'tab-chapas') { cargarMateriales(); cargarChapas(); }
+            if(tabId === 'tab-laser') { cargarPanelLaser(); }
         }
 
         async function agregarEtiquetaYStock() {
@@ -1173,9 +1251,124 @@
 
         // ===== FIN MÓDULO CHAPAS =====
 
+        // ===== MÓDULO LASER =====
+        const API_LASER = 'http://192.168.0.4:3000';
+        let filtroLaserActual = 'tots';
+
+        async function cargarPanelLaser(filtro) {
+            if (filtro) {
+                filtroLaserActual = filtro;
+                document.querySelectorAll('.btn-filtro-laser').forEach(b => b.classList.remove('actiu'));
+                const btn = document.getElementById('btn-' + filtro);
+                if (btn) btn.classList.add('actiu');
+            }
+
+            const lista = document.getElementById('lista-pedidos-laser');
+            lista.innerHTML = '<div style="padding:20px; color:#999; text-align:center;">Carregant...</div>';
+
+            try {
+                const resp = await fetch(`${API_LASER}/pedidos?estat=${filtroLaserActual}`);
+                const pedidos = await resp.json();
+                lista.innerHTML = '';
+
+                if (pedidos.length === 0) {
+                    lista.innerHTML = '<div style="padding:20px; color:#999; text-align:center; font-style:italic;">Cap pedido trobat</div>';
+                    return;
+                }
+
+                pedidos.forEach(p => {
+                    const div = document.createElement('div');
+                    div.className = `pedido-laser-item ${p.estat}`;
+                    div.onclick = () => cargarDetallLaser(p.comanda_client, div);
+                    div.innerHTML = `
+                        <div>
+                            <div style="font-weight:800; font-size:1rem;">${p.comanda_client}</div>
+                            <div style="font-size:0.75rem; color:#6b7280; margin-top:2px;">${p.linies} línies</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="estat-badge-laser ${p.estat}">${p.estat}</span>
+                            <div style="font-size:0.75rem; color:#6b7280; margin-top:4px;">${p.tallat}/${p.total} u.</div>
+                        </div>
+                    `;
+                    lista.appendChild(div);
+                });
+            } catch (err) {
+                lista.innerHTML = `<div style="padding:20px; color:#dc2626;">Error connectant amb l'API: ${err.message}</div>`;
+            }
+        }
+
+        async function cargarDetallLaser(comanda, itemEl) {
+            // Marcar seleccionat
+            document.querySelectorAll('.pedido-laser-item').forEach(el => el.classList.remove('seleccionat'));
+            if (itemEl) itemEl.classList.add('seleccionat');
+
+            const detall = document.getElementById('detall-laser');
+            const titol = document.getElementById('titol-detall-laser');
+            titol.textContent = `Pedido: ${comanda}`;
+            detall.innerHTML = '<div style="padding:20px; color:#999; text-align:center;">Carregant detall...</div>';
+
+            try {
+                const resp = await fetch(`${API_LASER}/pedido/${encodeURIComponent(comanda)}`);
+                const data = await resp.json();
+                detall.innerHTML = '';
+
+                if (!data.planols || data.planols.length === 0) {
+                    detall.innerHTML = '<div style="padding:20px; color:#999; font-style:italic;">Sense línies</div>';
+                    return;
+                }
+
+                data.planols.forEach(pl => {
+                    const card = document.createElement('div');
+                    card.className = 'planol-card';
+
+                    const qtPendent = pl.quantitat - pl.qtallat;
+                    const pct = pl.quantitat > 0 ? Math.round((pl.qtallat / pl.quantitat) * 100) : 0;
+
+                    let cncsHTML = '';
+                    if (pl.cncs.length === 0) {
+                        cncsHTML = '<div style="padding:10px 15px; color:#999; font-style:italic; font-size:0.85rem;">Sense CNC assignat</div>';
+                    } else {
+                        cncsHTML = `
+                            <div style="padding:8px 15px; background:#f8fafc; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; display:grid; grid-template-columns:80px 1fr 1fr 1fr 80px; gap:10px;">
+                                <span>CNC</span><span>Assignades</span><span>Tallades</span><span>Pendents</span><span>Estat</span>
+                            </div>`;
+                        pl.cncs.forEach(cnc => {
+                            cncsHTML += `
+                                <div class="cnc-row ${cnc.estat}">
+                                    <span style="font-weight:800;">#${cnc.cnc}</span>
+                                    <span>${cnc.assignades} u.</span>
+                                    <span style="color:#16a34a; font-weight:700;">${cnc.tallades} u.</span>
+                                    <span style="color:${cnc.pendents > 0 ? '#dc2626' : '#16a34a'}; font-weight:700;">${cnc.pendents} u.</span>
+                                    <span class="estat-badge-laser ${cnc.estat}" style="font-size:0.7rem;">${cnc.estat}</span>
+                                </div>`;
+                        });
+                    }
+
+                    card.innerHTML = `
+                        <div class="planol-header ${pl.estatGlobal}">
+                            <div>
+                                <div style="font-weight:800; font-size:0.95rem;">${pl.planol || pl.comanda_laser}</div>
+                                <div style="font-size:0.8rem; color:#4b5563; margin-top:2px;">${pl.referencia}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <span class="estat-badge-laser ${pl.estatGlobal}">${pl.estatGlobal}</span>
+                                <div style="font-size:0.75rem; color:#6b7280; margin-top:4px;">${pl.qtallat}/${pl.quantitat} u. · ${pct}%</div>
+                            </div>
+                        </div>
+                        ${cncsHTML}
+                    `;
+                    detall.appendChild(card);
+                });
+
+            } catch (err) {
+                detall.innerHTML = `<div style="padding:20px; color:#dc2626;">Error: ${err.message}</div>`;
+            }
+        }
+        // ===== FI MÓDULO LASER =====
+
         function cambiarPestanaDesdeInicio(tabId) {
             const botones = document.querySelectorAll('.tab-btn');
-            const tabs = ['tab-inicio','tab-crear','tab-almacen','tab-buscador','tab-chapas'];
+            const tabs = ['tab-inicio','tab-crear','tab-almacen','tab-buscador','tab-chapas','tab-laser'];
             const idx = tabs.indexOf(tabId);
             if(idx >= 0) cambiarPestana(tabId, botones[idx]);
         }
